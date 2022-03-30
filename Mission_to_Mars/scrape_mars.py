@@ -1,14 +1,11 @@
-from flask import Flask
+from flask import Flask, render_template
+from flask_pymongo import PyMongo
 import pymongo
 
 conn = 'mongodb://localhost:27017'
 client = pymongo.MongoClient(conn)
 
 app = Flask(__name__)
-
-@app.route("/")
-def home():
-    return "Home"
 
 @app.route("/scrape")
 def scrape():
@@ -39,25 +36,25 @@ def scrape():
     # In[ ]:
 
 
-    print(soup)
+    #print(soup)
 
 
     # In[ ]:
 
 
     results = soup.find('div', class_='container')
-    print(results)
+    #print(results)
 
 
     # In[10]:
 
 
     for result in results:
-        title = soup.find('div', class_='content_title')
-        article = soup.find('div', class_='article_teaser_body')
+        title = soup.find('div', class_='content_title').text
+        article = soup.find('div', class_='article_teaser_body').text
 
-    print(title.text)
-    print(article.text)
+    #print(title.text)
+    #print(article.text)
 
 
     # In[12]:
@@ -72,14 +69,14 @@ def scrape():
     # In[ ]:
 
 
-    print(soup)
+    #print(soup)
 
 
     # In[ ]:
 
 
     results = soup.find('div', class_='header')
-    print(results)
+    #print(results)
 
 
     # In[19]:
@@ -87,12 +84,12 @@ def scrape():
 
     for result in results:
         image = soup.find('img', class_='headerimage fade-in')
-    print(image)
+    #print(image)
 
     src = image.get('src')
 
     featured_image_url = url +"/" + src 
-    print(featured_image_url)
+    #print(featured_image_url)
 
 
     # In[20]:
@@ -107,14 +104,14 @@ def scrape():
     # In[ ]:
 
 
-    print(soup)
+    #print(soup)
 
 
     # In[ ]:
 
 
     results = soup.find('table', class_='table table-striped')
-    print(results)
+    #print(results)
 
 
     # In[32]:
@@ -139,24 +136,24 @@ def scrape():
     for x in range(len(info)):
         info[x] = info[x].replace('\t', '')
 
-    print(rows)
-    print(info)
+    #print(rows)
+    #print(info)
 
 
     # In[33]:
 
 
-    mars_facts = pd.DataFrame({
-        'Mars Planet Profile': rows,
-        "": info
-    })
-    mars_facts
+    #mars_facts = pd.DataFrame({
+    #    'Mars Planet Profile': rows,
+    #    "": info
+    #})
+    #mars_facts
 
 
     # In[34]:
 
 
-    mars_facts.to_html("Mars_Dataframe.html")
+    #mars_facts.to_html("Mars_Dataframe.html")
 
 
     # In[48]:
@@ -171,14 +168,14 @@ def scrape():
     # In[ ]:
 
 
-    print(soup)
+    #print(soup)
 
 
     # In[ ]:
 
 
     results = soup.find_all('div', class_='item')
-    print(results)
+    #print(results)
 
 
     # In[51]:
@@ -191,8 +188,8 @@ def scrape():
         hempisphere_name.append(result.find('a', class_= 'itemLink').get('href'))
         hempisphere_full_name.append(result.find('h3').text.rsplit(' ',1)[0])
 
-    print(hempisphere_name)
-    print(hempisphere_full_name)
+    #print(hempisphere_name)
+    #print(hempisphere_full_name)
 
 
     # In[59]:
@@ -213,7 +210,7 @@ def scrape():
         #print(href_link)
         hemi_images = url + href_link
         image_links.append(hemi_images)
-    print(image_links)
+    #print(image_links)
 
 
     # In[60]:
@@ -234,16 +231,23 @@ def scrape():
     # In[ ]:
     
     scraped_data = {
-        "title": title.text,
-        "article": article.text,
+        "title": title,
+        "article": article,
         "featured_image":featured_image_url,
-        "table": mars_facts,
+        #"table": mars_facts,
         'hemispheres': hemisphere_image_urls
     }
     return scraped_data
+
 db = client.scrapedDB
-scrape_results = db.scrape_results.find()
-db.scrape_results.insert_one(scrape())
+scraped_result = db.scraped_result.find()
+#db.scraped_result.insert_one(scrape())
+
+@app.route("/")
+def index():
+    for_html = scraped_result
+    return render_template('index.html', tasks= for_html)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
